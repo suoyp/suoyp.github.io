@@ -1,0 +1,4 @@
+http://blog.paul99.com/dev-guide/http-basic-and-digest-access-authentication.html
+http://blog.paul99.com/jvm/JVM-Loading-Linking-and-Initializing.html
+http://blog.paul99.com/jvm/JVM-Run-Time-Data-Areas.html
+http://blog.paul99.com/inspirational-story/Declaration-on-Learning.html

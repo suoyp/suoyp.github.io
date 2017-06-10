@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+
+    
+  <url>
+    <loc>http://blog.paul99.com/dev-guide/http-basic-and-digest-access-authentication.html</loc>
+    <lastmod>2017-06-10T16:52:58.697Z</lastmod>
+    <data>
+        <display>
+        <title>HTTP 认证：基本和摘要访问认证</title>
+        <pubTime>2017-06-07T13:49:40.000Z</pubTime>
+        
+        <tag>HTTP</tag>
+         
+        <tag>认证</tag>
+         
+         
+           
+             
+              <breadCrumb title="开发者手册" url="http://blog.paul99.com/categories/dev-guide/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.paul99.com/jvm/JVM-Loading-Linking-and-Initializing.html</loc>
+    <lastmod>2017-06-10T16:41:57.313Z</lastmod>
+    <data>
+        <display>
+        <title>JVM 加载，链接和初始化</title>
+        <pubTime>2017-05-22T04:07:50.000Z</pubTime>
+        
+        <tag>JAVA</tag>
+         
+        <tag>JVM</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java虚拟机" url="http://blog.paul99.com/categories/jvm/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.paul99.com/inspirational-story/Declaration-on-Learning.html</loc>
+    <lastmod>2017-05-22T11:48:00.810Z</lastmod>
+    <data>
+        <display>
+        <title>论学习</title>
+        <pubTime>2017-05-13T05:14:36.000Z</pubTime>
+        
+        <tag>论学习</tag>
+         
+         
+           
+             
+              <breadCrumb title="心灵鸡汤" url="http://blog.paul99.com/categories/inspirational-story/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+  <url>
+    <loc>http://blog.paul99.com/jvm/JVM-Run-Time-Data-Areas.html</loc>
+    <lastmod>2017-05-22T11:42:53.924Z</lastmod>
+    <data>
+        <display>
+        <title>JVM运行时数据区</title>
+        <pubTime>2017-05-15T13:58:31.000Z</pubTime>
+        
+        <tag>JAVA</tag>
+         
+        <tag>JVM</tag>
+         
+         
+           
+             
+              <breadCrumb title="Java虚拟机" url="http://blog.paul99.com/categories/jvm/"/>
+          
+        </display>
+    </data>
+    </url>
+
+    
+    
+</urlset>

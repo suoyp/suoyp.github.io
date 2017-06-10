@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" >
+    <meta http-equiv="X-UA-Compatible" content="IE=11,IE=10,IE=9,IE=8" >
+    <meta name="baidu-site-verification" content="d3vfwOI2ln" />
+    
+    <title>jvm 加载，链接和初始化 - IT小站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" >
+    <meta name="keywords" content="Paul站, 索云鹏的博客小站, 后端, Web, 索云鹏, 后端开发, PHP, JAVA" >
+    <meta name="description" content="索云鹏的博客小站" >
+
+    
+    <link rel="alternative" href="/atom.xml" title="IT小站" type="application/atom+xml" >
+    
+    
+    <link rel="shortcut icon" href="/favicon.ico" >
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <!--[if lt IE 9]>
+    <script src="/js/html5.js"></script>
+    <![endif]-->
+    
+<script>
+    var _hmt = _hmt || [];
+    (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?7d24a85ac474eaa644c8c3e848bde83c";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+    
+    <script>var yunModuleEnv = true;</script>
+    <script src="https://img1.cache.netease.com/f2e/tie/yun/sdk/loader.js"></script>
+    
+</head>
+
+<body class="home">
+    <!--[if lt IE 9]>
+    <div class="browsehappy">
+        当前网页 <strong>不支持</strong>
+        你正在使用的浏览器. 为了正常的访问, 请 <a href="http://browsehappy.com/">升级你的浏览器</a>.
+    </div>
+    <![endif]-->
+
+    <!-- 博客头部 -->
+    <header class="header">
+    <section class="container header-main">
+        <div class="logo">
+            <a href="/">
+                <div class="cover">
+                    <span class="name">Paul Suo</span>
+                    <span class="description">索云鹏的博客小站</span>
+                </div>
+            </a>
+        </div>
+        <div class="dropnav icon-paragraph-justify" id="JELON__btnDropNav"></div>
+        <ul class="menu hidden" id="JELON__menu">
+            
+            <li rel="/jvm/JVM-Loading-Linking-and-Initializing.html" class="item ">
+                <a href="/" title="首页" class="icon-home">&nbsp;首页</a>
+            </li>
+            
+            <li rel="/jvm/JVM-Loading-Linking-and-Initializing.html" class="item ">
+                <a href="/about/" title="关于" class="icon-about">&nbsp;关于</a>
+            </li>
+            
+            <li rel="/jvm/JVM-Loading-Linking-and-Initializing.html" class="item ">
+                <a href="/comment/" title="留言" class="icon-comment">&nbsp;留言</a>
+            </li>
+            
+        </ul>
+        <div class="profile clearfix">
+            <div class="feeds fl">
+                
+                
+                <p class="links">
+                    
+                        <a href="https://coding.net/u/suoyp2015" target="_blank">Coding</a>
+                        |
+                    
+                        <a href="https://github.com/suoyp" target="_blank">Github</a>
+                        |
+                    
+                        <a href="http://tongji.baidu.com/web/welcome/login" target="_blank">百度统计</a>
+                        
+                    
+                </p>
+                <p class="sns">
+                    
+                    <a href="javascript: void(0);" class="wechat">
+                        <b>■</b>
+                        公众号
+                        <span class="popover">
+                            <img src="/img/wechat_mp.jpg" width="120" height="120" alt="我的微信订阅号">
+                            <i class="arrow"></i>
+                        </span>
+                    </a>
+                </p>
+                
+            </div>
+            <div class="avatar fr">
+                <img src="/img/paul.jpg" alt="avatar" title="Jelon" >
+            </div>
+        </div>
+    </section>
+</header>
+
+
+    <!-- 博客正文 -->
+    <div class="container body clearfix">
+        <section class="content">
+            <div class="content-main widget">
+                <!-- 文章页 -->
+<!-- 文章 -->
+<article class="post article">
+    <header class="text-center">
+        <h3 class="post-title"><span>JVM 加载，链接和初始化</span></h3>
+    </header>
+    <p class="post-meta text-center">
+        Paul 发表于
+        <time datetime="2017-05-22T04:07:50.000Z">2017-05-22</time>
+    </p>
+    <div class="post-content">
+        <p>JAVA虚拟机动态的加载、链接、初始化类和接口。加载是根据全限定名查找类或接口的二进制表示（可以是任意符合<code>.class</code>字节码规范的物理磁盘或网络文件），并由此创建类或接口的过程。链接是为了类或接口可以在虚拟机中执行，而进行的一系列验证、准备、解析操作，并最终并入运行时的过程。初始化是指执行类或接口的初始化<code>&lt;clinit&gt;</code>。</p>
+<a id="more"></a>
+<h2 id="一、类的加载阶段"><a href="#一、类的加载阶段" class="headerlink" title="一、类的加载阶段"></a>一、类的加载阶段</h2><h3 id="1-介绍"><a href="#1-介绍" class="headerlink" title="1. 介绍"></a>1. 介绍</h3><p>虚拟机在加载阶段主要完成目标类的定位、读取、构造方法区数据结构，以及代表该类的java.lang.Class对象的过程，为之后的链接和初始化阶段构造可供使用的运行时数据结构。</p>
+<ol>
+<li>通过一个类或接口的全限定名，获取此类或接口的二进制流表示</li>
+<li>将这个字节流所代表的静态的数据结构存储转化伪方法区的运行时数据结构（不同的虚拟机有不同的实现）</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，用于这个类对方法区中的各种数据的访问入口</li>
+</ol>
+<h3 id="2-类加载器"><a href="#2-类加载器" class="headerlink" title="2. 类加载器"></a>2. 类加载器</h3><p>类加载器用于完成<code>通过一个类的接口的全限定名，获取此类或接口的二进制流表示</code>这个的动作。</p>
+<blockquote>
+<p><em>类对象是由类加载器和累的全限定名共同标识的，不同的类加载器加载的同一个二进制流的表示，最终所形成的类对象是不同的。</em></p>
+</blockquote>
+<p><img src="http://oqcnlcgfk.bkt.clouddn.com/JVM-Loading-Linking-and-Initializing/classLoader.png" alt=""></p>
+<ol>
+<li><p>启动类加载器（Bootstrap ClassLoader）</p>
+<p> 启动类加载器负责加载<java_home>/lib目录中的，且需是虚拟机能够识别的类库加载到虚拟机内存中（仅按照名字识别）。</java_home></p>
+</li>
+<li><p>扩展类加载器（Extension ClassLoader）</p>
+<p> 扩展类加载器负责加载<java_home>/ext 目录中的或者别java.ext.dirs系统变量所制定的路径中的所有类库。</java_home></p>
+</li>
+<li><p>应用程序类加载器（Application ClassLoader）</p>
+<p> 应用程序类加载器负责加载类路径中的（classpath）上所制定的类库。如果应用程序中没有自己定义过类加载器，则一般情况下他就是默认的类加载器。</p>
+</li>
+<li><p>自定义类加载器（User ClassLoader）</p>
+</li>
+</ol>
+<h3 id="3-Java中类加载器双亲委派模型"><a href="#3-Java中类加载器双亲委派模型" class="headerlink" title="3. Java中类加载器双亲委派模型"></a>3. Java中类加载器双亲委派模型</h3><p>如果类加载器收到了类加载请求，他首先请求父类加载器进行加载，每一个层次的类加载器都是如此，因此所有的类加载请求，最终都会到达启动类加载器，只有当父类加载器无法完成加载时，子加载器才会尝试自己加载。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="keyword">boolean</span> resolve)</div><div class="line">    <span class="keyword">throws</span> ClassNotFoundException</div><div class="line">&#123;</div><div class="line">    <span class="keyword">synchronized</span> (getClassLoadingLock(name)) &#123;</div><div class="line">        <span class="comment">// 首先, 检查当前类加载器是否已经加载过这个类</span></div><div class="line">        Class&lt;?&gt; c = findLoadedClass(name);</div><div class="line">        <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</div><div class="line">            <span class="keyword">long</span> t0 = System.nanoTime();</div><div class="line">            <span class="keyword">try</span> &#123;</div><div class="line">                <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</div><div class="line">                    <span class="comment">// 请求父的类加载器执行加载</span></div><div class="line">                    c = parent.loadClass(name, <span class="keyword">false</span>);</div><div class="line">                &#125; <span class="keyword">else</span> &#123;</div><div class="line">                    <span class="comment">// 当parent为null时说明调用启动类加载器进行查找，如果未找到返回null</span></div><div class="line">                    c = findBootstrapClassOrNull(name);</div><div class="line">                &#125;</div><div class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</div><div class="line">                <span class="comment">// 如果non-null的父加载器加载失败，会抛出ClassNotFoundException</span></div><div class="line">            &#125;</div><div class="line"></div><div class="line">            <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</div><div class="line">                <span class="comment">// 如果父类加载失败，则调用findClass方法进行查找加载操作</span></div><div class="line">                c = findClass(name); </div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">if</span> (resolve) &#123;</div><div class="line">            resolveClass(c);</div><div class="line">        &#125;</div><div class="line">        <span class="keyword">return</span> c;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="二、链接"><a href="#二、链接" class="headerlink" title="二、链接"></a>二、链接</h2><blockquote>
+<p> 魔数：根据这几个字节的内容就可以确定文件类型</p>
+</blockquote>
+<h3 id="1-验证"><a href="#1-验证" class="headerlink" title="1. 验证"></a>1. 验证</h3><p>验证阶段用于确保类或接口的二进制表示在结构上是正确的，这个阶段可能为导致某些额外的类和接口被加载进来，但不一定会导致他们也需要验证或准备。这一阶段的目的主要是确保class文件的字节流中的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全。</p>
+<p>主要是为了验证字节流符合class文件格式的规范，并且能够被当前版本的虚拟机处理。以下列举几个（部分）验证点：</p>
+<ul>
+<li>验证是否以魔数0xCAFEBABE (咖啡，也许这就是java的图标的灵感由来，哈哈，Baby这个词有不有听起来很sexy呢！)</li>
+<li>检查主版本和此版本号是否在当前虚拟机处理范围之外</li>
+<li>验证常量池中是否有不支持的常量类型</li>
+<li>保证跳转指令不会跳转到方法体以为的字节码指令上。</li>
+<li>保证数据不会发生越界访问。</li>
+<li>符号引用中通过字符串描述的全限定名能找到对应的类或接口（集成的父类型，成员变量类型或参数的类型）。</li>
+</ul>
+<p>这个阶段的验证是基于二进制流进行验证的，通过类这个阶段的验证之后，数据才会进入内存的方法区中进行存储。之后的阶段都基于当前阶段进行。</p>
+<h3 id="2-准备"><a href="#2-准备" class="headerlink" title="2. 准备"></a>2. 准备</h3><p>准备阶段的任务是在方法区中为类或接口的静态（static）字段分配内存空间，并用默认值初始化这些字段。这个阶段不会执行任何的字节指令。此处的初始化只是将这些字段置为该字段的数据类型的零值。在初识化阶段会有显式的调用<cinit>类构造器来初始化设置这些字段的值。。</cinit></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">10</span>; <span class="comment">// 准备阶段只是将i置为0，初始化阶段才会调用&lt;cinit&gt;类构造器, 执行其中的putstatic指令赋值为10</span></div></pre></td></tr></table></figure>
+<h3 id="3-解析"><a href="#3-解析" class="headerlink" title="3. 解析"></a>3. 解析</h3><p>当你运行程序的时候，如果某个符号引用被用到时，他就需要被解析。解析（resolution）是根据运行时常量池中的符号引用来动态决查找并替换为具体值的过程。</p>
+<blockquote>
+<p>The Java Virtual Machine instructions anewarray, checkcast, getfield, getstatic, instanceof, invokedynamic, invokeinterface, invokespecial, invokestatic, invokevirtual, ldc, ldc_w, multianewarray, new, putfield, and putstatic make symbolic references to the run-time constant pool. Execution of any of these instructions requires resolution of its symbolic reference.</p>
+<p>Java 虚拟机指令 anewarray、 checkcast、 getfield、 getstatic、 instanceof、invokedynamic、invokeinterface、 invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putfield 和 putstatic使用向运行常量池的符号引用作为操作数，执行上述的任意一条指令都需要对他的符号引用进行解析。</p>
+</blockquote>
+<h2 id="三、初始化"><a href="#三、初始化" class="headerlink" title="三、初始化"></a>三、初始化</h2><p>The class’s static initializers that are defined in the class as Java code are run. If an exception is caused by such an initializer, this exception is rethrown wrapped in an ExceptionInInitializerError.</p>
+<p>执行类或接口的初始化方法<cinit>。如下的代码都将被虚拟机放进当前类的<cinit>类构造器方法中</cinit></cinit></p>
+<p>Demo.java文件<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo</span> </span>&#123;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> i = <span class="number">1</span>;</div><div class="line">    </div><div class="line">    <span class="keyword">static</span> &#123;</div><div class="line">        System.out.println(<span class="string">"how are you!"</span>)</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>javap反汇编后得到的输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">Compiled from &quot;Demo.java&quot;</div><div class="line">public class Demo &#123;</div><div class="line">  public static int i;</div><div class="line"></div><div class="line">  public Demo();</div><div class="line">    Code:</div><div class="line">       0: aload_0</div><div class="line">       1: invokespecial #1                  // Method java/lang/Object.&quot;&lt;init&gt;&quot;:()V</div><div class="line">       4: return</div><div class="line"></div><div class="line">  static &#123;&#125;;</div><div class="line">    Code:</div><div class="line">       0: iconst_1</div><div class="line">       1: putstatic     #2                  // Field i:I</div><div class="line">       4: getstatic     #3                  // Field java/lang/System.out:Ljava/io/PrintStream;</div><div class="line">       7: ldc           #4                  // String how are you!</div><div class="line">       9: invokevirtual #5                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V</div><div class="line">      12: return</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p><code>public Demo();</code>是Demo类的构造器方法，这个方法开始将当前方法本地变量表中的第0个变量（this，引用类型）压入操作数栈，之后执行invokespecial指令，调用父java.lang.Object类的的构造器方法，最后将控制权返还给调用者（此处为：Demo的实例构造器方法<init>）。</init></p>
+<p><code>static {};</code> 这部分为Demo类的类构造器<cinit>的指令序列的集合，类构造器方法有虚拟机在初始化阶段调用。首先将int类型的常量1压入操作数栈，之后执行putstatic指令向静态变量赋值1。之后是获取System的静态成员变量out，随后也将常量’how are you!’压入操作数栈中，再调用println方法完成打印，最终调用return指令<cinit>类构造器方法执行结束。</cinit></cinit></p>
+<h2 id="四、参考资料"><a href="#四、参考资料" class="headerlink" title="四、参考资料"></a>四、参考资料</h2><ul>
+<li><a href="http://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf" title="The Java Virtual Machine Specification, Java SE 8 Edition" target="_blank" rel="external">The Java Virtual Machine Specification, Java SE 8 Edition</a></li>
+<li><a href="http://www.artima.com/insidejvm/ed2/linkmod.html" title="The Linking Model" target="_blank" rel="external">Chapter 8 of Inside the Java Virtual Machine - The Linking Model</a></li>
+<li>深入理解Java虚拟机-JVM高级特性与最佳实践（第2版）</li>
+</ul>
+
+    </div>
+    <p class="post-meta">
+        <span class="post-cat">分类：
+            <a class="cat-link" href="/categories/jvm/">Java虚拟机</a>
+        </span>
+        <span class="post-tags">
+            标签：
+            
+    
+        <a href="/tags/java/" title="JAVA">JAVA</a> / 
+    
+        <a href="/tags/jvm/" title="JVM">JVM</a>
+    
+
+        </span>
+    </p>
+</article>
+<div class="article-share clearfix text-center">
+    <div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+    <script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+</div>
+
+<!-- 上一篇/下一篇 -->
+
+<div class="article-nav clearfix">
+    
+    <span class="prev fl">
+        上一篇<br >
+        <a href="/dev-guide/http-basic-and-digest-access-authentication.html">
+            
+                HTTP 认证：基本和摘要访问认证
+            
+        </a>
+    </span>
+    
+
+    
+    <span class="next fr">
+        下一篇<br >
+        <a href="/jvm/JVM-Run-Time-Data-Areas.html">
+            
+                JVM运行时数据区
+            
+        </a>
+    </span>
+    
+</div>
+
+<!-- 文章评论 -->
+
+    <div id="comments" class="comments cloud-tie-wrapper"></div>
+    <script>
+    var cloudTieConfig = {
+      url: document.location.href, 
+      sourceId: "JVM-Loading-Linking-and-Initializing",
+      productKey: "89034ca327344af68a2894378959c86f",
+      target: "comments"
+    };
+    var yunManualLoad = true;
+    Tie.loader("aHR0cHM6Ly9hcGkuZ2VudGllLjE2My5jb20vcGMvbGl2ZXNjcmlwdC5odG1s", true);
+    </script>
+
+            </div>
+
+        </section>
+        <!-- 侧栏部分 -->
+<aside class="sidebar">
+    <section class="widget">
+        <h3 class="widget-hd"><strong>文章分类</strong></h3>
+        <!-- 文章分类 -->
+<ul class="widget-bd">
+    
+    <li>
+        <a href="/categories/inspirational-story/">心灵鸡汤</a>
+        <span class="badge">(1)</span>
+    </li>
+    
+    <li>
+        <a href="/categories/jvm/">Java虚拟机</a>
+        <span class="badge">(2)</span>
+    </li>
+    
+    <li>
+        <a href="/categories/dev-guide/">开发者手册</a>
+        <span class="badge">(1)</span>
+    </li>
+    
+</ul>
+    </section>
+
+    
+    <section class="widget">
+        <h3 class="widget-hd"><strong>热门标签</strong></h3>
+        <!-- 文章标签 -->
+<div class="widget-bd tag-wrap">
+  
+    <a class="tag-item" href="/tags/learning/" title="论学习">论学习 (1)</a>
+  
+    <a class="tag-item" href="/tags/java/" title="JAVA">JAVA (2)</a>
+  
+    <a class="tag-item" href="/tags/jvm/" title="JVM">JVM (2)</a>
+  
+    <a class="tag-item" href="/tags/http/" title="HTTP">HTTP (1)</a>
+  
+    <a class="tag-item" href="/tags/authentication/" title="认证">认证 (1)</a>
+  
+</div>
+    </section>
+    
+
+    
+
+    
+    <!-- 友情链接 -->
+    <section class="widget">
+        <h3 class="widget-hd"><strong>友情链接</strong></h3>
+        <!-- 文章分类 -->
+<ul class="widget-bd">
+    
+        <li>
+            <a href="http://www.ruanyifeng.com/blog/" target="_blank" title="http://www.ruanyifeng.com/blog">阮一峰博客</a>
+        </li>
+    
+</ul>
+    </section>
+    
+</aside>
+<!-- / 侧栏部分 -->
+    </div>
+
+    <!-- 博客底部 -->
+    <footer class="footer">
+    &copy;
+    
+        2016-2017
+    
+
+    <a href="/">Paul Loves You</a>
+</footer>
+<div class="back-to-top" id="JELON__backToTop" title="返回顶部">返回顶部</div>
+<!-- 添加百度自动推送 -->
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+    <!--博客js脚本 -->
+    <!-- 这里放网站js脚本 -->
+<script src="/js/main.js"></script>
+</body>
+</html>
